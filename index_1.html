@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.11.7/video-js.min.css"
+      rel="stylesheet"
+    />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.11.7/video.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/videojs-contrib-eme@3.8.0/dist/videojs-contrib-eme.js"></script>
+
+    <title>Dynamic Segments with Video.js</title>
+    <style>
+      .segment-tooltip {
+        position: absolute;
+        background-color: white;
+        color: black;
+        padding: 5px;
+        border-radius: 3px;
+        display: none;
+        z-index: 1000;
+      }
+    </style>
+  </head>
+  <body>
+    <div style="margin: 50px auto; position: relative">
+      <video id="my-video" class="video-js vjs-default-skin" controls></video>
+      <div id="segment-tooltip" class="segment-tooltip"></div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        var player = videojs("my-video", {
+          controls: true,
+          fluid: true,
+          html5: {
+            vhs: {
+              overrideNative: true,
+            },
+          },
+        });
+
+        var hlsStreamURL =
+          "https://cdn.bitmovin.com/content/assets/art-of-motion_drm/mpds/11331.mpd";
+        player.src({
+          src: hlsStreamURL,
+          type: "application/dash+xml",
+          keySystems: {
+            "com.widevine.alpha":
+              "https://cwip-shaka-proxy.appspot.com/no_auth",
+          },
+        });
+
+        // Define your segments here
+        var segments = [
+          { start: 0, end: 60, title: "Introduction" },
+          { start: 61, end: 120, title: "Body" },
+          { start: 121, end: 180, title: "Foot" },
+          { start: 181, end: 210, title: "End" },
+        ];
+
+        // Event listener for displaying segment information on hover
+        player.controlBar.progressControl.on("mousemove", function (event) {
+          var mouseX =
+            event.pageX - player.controlBar.progressControl.el().offsetLeft;
+          var totalTime = player.duration();
+          var percentage =
+            (mouseX / player.controlBar.progressControl.width()) * 100;
+
+          for (var i = 0; i < segments.length; i++) {
+            var segment = segments[i];
+            if (
+              percentage >= (segment.start / totalTime) * 100 &&
+              percentage <= (segment.end / totalTime) * 100
+            ) {
+              var tooltip = document.getElementById("segment-tooltip");
+              tooltip.textContent = segment.title;
+              var toolTipTop = event.pageY - 100;
+              tooltip.style.left = event.pageX + "px";
+              tooltip.style.top = toolTipTop + "px";
+              tooltip.style.display = "block";
+              break;
+            }
+          }
+        });
+
+        // Event listener for hiding segment information on mouseout
+        player.controlBar.progressControl.on("mouseout", function () {
+          var tooltip = document.getElementById("segment-tooltip");
+          tooltip.style.display = "none";
+        });
+
+        // Function to scroll to the start of a specific segment
+        function scrollToSegment(segmentIndex) {
+          var segment = segments[segmentIndex];
+          player.currentTime(segment.start);
+        }
+
+        // Print console messages to debug
+        player.on("loadstart", function () {
+          console.log("loadstart");
+        });
+
+        player.on("loadeddata", function () {
+          console.log("loadeddata");
+        });
+
+        player.on("loadedmetadata", function () {
+          console.log("loadedmetadata");
+        });
+
+        player.on("timeupdate", function () {
+          console.log("timeupdate", player.currentTime());
+        });
+      });
+    </script>
+  </body>
+</html>
