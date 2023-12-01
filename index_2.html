@@ -1,5 +1,5 @@
 <!-- 
-    In this file the segment will only appear with the title
+    In this file the segment will appear with title along with the time.
  -->
 
 <!DOCTYPE html>
@@ -28,6 +28,7 @@
         border-radius: 3px;
         display: none;
         z-index: 1000;
+        text-align: center;
       }
     </style>
   </head>
@@ -83,9 +84,15 @@
               percentage <= (segment.end / totalTime) * 100
             ) {
               var tooltip = document.getElementById("segment-tooltip");
-              tooltip.textContent = segment.title;
+              var elapsedTime =
+                segment.start +
+                Math.floor((segment.end - segment.start) * (percentage / 100));
+              //   var elapsedTime = player.currentTime();
+              var timeString = formatTime(elapsedTime);
+              tooltip.innerHTML = `${segment.title}<br>${timeString}`;
               var toolTipTop = event.pageY - 100;
-              tooltip.style.left = event.pageX + "px";
+              var toolTipBottom = event.pageX - 50;
+              tooltip.style.left = toolTipBottom + "px";
               tooltip.style.top = toolTipTop + "px";
               tooltip.style.display = "block";
               break;
@@ -98,6 +105,13 @@
           var tooltip = document.getElementById("segment-tooltip");
           tooltip.style.display = "none";
         });
+
+        // Function to format time in HH:MM:SS
+        function formatTime(seconds) {
+          var date = new Date(null);
+          date.setSeconds(seconds);
+          return date.toISOString().substr(11, 8);
+        }
 
         // Function to scroll to the start of a specific segment
         function scrollToSegment(segmentIndex) {
